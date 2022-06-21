@@ -45,7 +45,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const fullName = req.body.fullname;
   const userName = req.body.username;
-  const password = req.body.password;
+  const password = md5(req.body.password);
 
   const user = new User({
     fullName: fullName,
@@ -67,7 +67,7 @@ app.get("/login", (req, res) => {
 });
 app.post("/login", (req, res) => {
   const reqEmail = req.body.username;
-  const reqPass = req.body.password;
+  const reqPass = md5(req.body.password);
   User.find({ userName: reqEmail }, (err, foundUser) => {
     if (!err) {
       if (foundUser[0].password == reqPass) {
