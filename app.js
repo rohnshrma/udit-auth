@@ -1,13 +1,13 @@
-require('dotenv').config()
+require("dotenv").config();
 
 //jshint esversion:6
 
-
-
 const express = require("express");
 const app = express();
-var md5 = require('md5');
+
 const bodyParser = require("body-parser");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 const mongoose = require("mongoose");
 
@@ -45,20 +45,22 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const fullName = req.body.fullname;
   const userName = req.body.username;
-  const password = md5(req.body.password);
+  const password = req.body.password;
 
-  const user = new User({
-    fullName: fullName,
-    userName: userName,
-    password: password,
-  });
+  bcrypt.hash(password, saltRounds, function (err, hash) {
+    const user = new User({
+      fullName: fullName,
+      userName: userName,
+      password: hash,
+    });
 
-  user.save((err) => {
-    if (!err) {
-      res.render("secrets");
-    } else {
-      res.redirect("/");
-    }
+    user.save((err) => {
+      if (!err) {
+        res.render("secrets");
+      } else {
+        res.redirect("/");
+      }
+    });
   });
 });
 
@@ -67,18 +69,23 @@ app.get("/login", (req, res) => {
 });
 app.post("/login", (req, res) => {
   const reqEmail = req.body.username;
-  const reqPass = md5(req.body.password);
+  const reqPass = req.body.password;
+
   User.find({ userName: reqEmail }, (err, foundUser) => {
     if (!err) {
-      if (foundUser[0].password == reqPass) {
-        res.render("secrets");
-      }else{
-        res.redirect("/login")
+      if (foundUser) {
+        bcrypt.compare(reqPass, foundUser[0].password, function (err, result) {
+          if (result) {
+            res.render("secrets");
+          }
+        });
+      } else {
+        res.redirect("/login");
       }
     }
   });
 });
 
-app.listen(3000, () => {
+app.listen(5500, () => {
   console.log("server started on port : 3000");
 });
