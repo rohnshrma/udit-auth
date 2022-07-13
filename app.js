@@ -13,8 +13,9 @@ const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 const passportLocal = require("passport-local");
 const session = require("express-session");
+
+var GoogleStrategy = require('passport-google-oauth20').Strategy;
 var findOrCreate = require('mongoose-findorcreate')
-var GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -47,7 +48,8 @@ const userSchema = new mongoose.Schema({
     // required: true,
     type: String,
   },
-  googleId: String,
+  googleId:String
+
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -68,38 +70,41 @@ passport.deserializeUser(function(id, done) {
       done(err, user);
   });
 });
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.CLIENT_ID,
-      clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: "http://localhost:5500/auth/google/secrets",
-    },
-    function (accessToken, refreshToken, profile, cb) {
-      console.log(profile);
-      User.findOrCreate({ googleId: profile.id }, function (err, user) {
-        return cb(err, user);
-      });
-    }
-  )
-);
+
+
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.CLIENT_ID,
+  clientSecret: process.env.CLIENT_SECRET,
+  callbackURL: "http://localhost:5500/auth/google/secrets"
+},
+function(accessToken, refreshToken, profile, cb) {
+
+console.log(profile);
+
+  User.findOrCreate({ googleId: profile.id }, function (err, user) {
+    return cb(err, user);
+  });
+}
+));
+
+
 
 // routes
 app.get("/", (req, res) => {
   res.render("home");
 });
 
-app.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile"] })
-);
+app.get("/auth/google",
+  passport.authenticate("google", { scope: ["profile"] }));
 
-app.get('/auth/google/secrets', 
+app.get("/auth/google/secrets", 
   passport.authenticate("google", { failureRedirect: "/login" }),
   function(req, res) {
     // Successful authentication, redirect secrets.
     res.redirect("/secrets");
   });
+
 
 
 app.get("/register", (req, res) => {
