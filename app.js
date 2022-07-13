@@ -32,7 +32,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect("mongodb://localhost:27017/secretsDB");
+mongoose.connect(`mongodb+srv://Admin-Rohan:${process.env.ADMIN_PASS}@cluster0.2vxj1.mongodb.net/secretsDB`);
 
 // schema
 const userSchema = new mongoose.Schema({
@@ -173,6 +173,6 @@ app.get("/logout", (req, res) => {
   });
 });
 
-app.listen(5500, () => {
+app.listen(process.env.PORT || 5500, () => {
   console.log("server started on port : 5500");
 });
